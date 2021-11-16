@@ -55,35 +55,6 @@ abstract contract ERC721WithPermit is IERC721WithPermit, ERC721 {
         return _nonces[tokenId];
     }
 
-    /// @notice Creates the permit digest to sign
-    /* /// @param owner the token owner */
-    /// @param spender the token spender
-    /// @param tokenId the tokenId
-    /// @param nonce the nonce to make a permit for
-    /// @param deadline the deadline before when the permit can be used
-    /// @return the digest (following eip712) to sign
-    function makePermitDigest(
-        // address owner,
-        address spender,
-        uint256 tokenId,
-        uint256 nonce,
-        uint256 deadline
-    ) public view returns (bytes32) {
-        return
-            ECDSA.toTypedDataHash(
-                _DOMAIN_SEPARATOR,
-                keccak256(
-                    abi.encode(
-                        PERMIT_TYPEHASH,
-                        spender,
-                        tokenId,
-                        nonce,
-                        deadline
-                    )
-                )
-            );
-    }
-
     /// @notice function to be called by anyone to approve `spender` using a Permit signature
     /// @dev Anyone can call this to approve `spender`, even a third-party
     /* /// @param owner the owner of the token */
@@ -92,7 +63,6 @@ abstract contract ERC721WithPermit is IERC721WithPermit, ERC721 {
     /// @param deadline the deadline for the permit to be used
     /// @param signature permit
     function permit(
-        // address owner,
         address spender,
         uint256 tokenId,
         uint256 deadline,
@@ -100,7 +70,7 @@ abstract contract ERC721WithPermit is IERC721WithPermit, ERC721 {
     ) public {
         require(deadline >= block.timestamp, '!PERMIT_DEADLINE_EXPIRED!');
 
-        bytes32 digest = makePermitDigest(
+        bytes32 digest = _buildDigest(
             // owner,
             spender,
             tokenId,
@@ -126,26 +96,31 @@ abstract contract ERC721WithPermit is IERC721WithPermit, ERC721 {
         _approve(spender, tokenId);
     }
 
-    function recoverPermit(
-        // address owner,
+    /// @notice Builds the permit digest to sign
+    /// @param spender the token spender
+    /// @param tokenId the tokenId
+    /// @param nonce the nonce to make a permit for
+    /// @param deadline the deadline before when the permit can be used
+    /// @return the digest (following eip712) to sign
+    function _buildDigest(
         address spender,
         uint256 tokenId,
-        uint256 deadline,
-        bytes memory signature
-    ) public view returns (address) {
-        require(deadline >= block.timestamp, '!PERMIT_DEADLINE_EXPIRED!');
-
-        bytes32 digest = makePermitDigest(
-            // owner,
-            spender,
-            tokenId,
-            _nonces[tokenId],
-            deadline
-        );
-
-        (address recoveredAddress, ) = ECDSA.tryRecover(digest, signature);
-
-        return recoveredAddress;
+        uint256 nonce,
+        uint256 deadline
+    ) public view returns (bytes32) {
+        return
+            ECDSA.toTypedDataHash(
+                _DOMAIN_SEPARATOR,
+                keccak256(
+                    abi.encode(
+                        PERMIT_TYPEHASH,
+                        spender,
+                        tokenId,
+                        nonce,
+                        deadline
+                    )
+                )
+            );
     }
 
     /// @dev helper to easily increment a nonce for a given tokenId
