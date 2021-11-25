@@ -21,30 +21,29 @@ abstract contract ERC721WithPermit is IERC721WithPermit, ERC721 {
             'Permit(address spender,uint256 tokenId,uint256 nonce,uint256 deadline)'
         );
 
-    bytes32 internal _DOMAIN_SEPARATOR;
-
     mapping(uint256 => uint256) private _nonces;
 
     // function to initialize the contract
     constructor(string memory name_, string memory symbol_)
         ERC721(name_, symbol_)
-    {
-        // this creates the DOMAIN_SEPARATOR used in EIP-712
-        _DOMAIN_SEPARATOR = keccak256(
-            abi.encode(
-                keccak256(
-                    'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
-                ),
-                keccak256(bytes(name_)),
-                keccak256(bytes('1')),
-                block.chainid,
-                address(this)
-            )
-        );
-    }
+    {}
 
+    /// @notice Builds the DOMAIN_SEPARATOR (eip712) at time of use
+    /// @dev This is not set as a constant, to ensure that the chainId will change in the event of a chain fork
+    /// @return the DOMAIN_SEPARATOR of eip712
     function DOMAIN_SEPARATOR() public view returns (bytes32) {
-        return _DOMAIN_SEPARATOR;
+        return
+            keccak256(
+                abi.encode(
+                    keccak256(
+                        'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
+                    ),
+                    keccak256(bytes(name())),
+                    keccak256(bytes('1')),
+                    block.chainid,
+                    address(this)
+                )
+            );
     }
 
     /// @notice Allows to retrieve current nonce for token
@@ -110,7 +109,7 @@ abstract contract ERC721WithPermit is IERC721WithPermit, ERC721 {
     ) public view returns (bytes32) {
         return
             ECDSA.toTypedDataHash(
-                _DOMAIN_SEPARATOR,
+                DOMAIN_SEPARATOR(),
                 keccak256(
                     abi.encode(
                         PERMIT_TYPEHASH,
@@ -148,9 +147,14 @@ abstract contract ERC721WithPermit is IERC721WithPermit, ERC721 {
     /// @dev Overriden from ERC721 here in order to include the interface of this EIP
     /// @return `true` if the contract implements `interfaceID` and
     ///  `interfaceID` is not 0xffffffff, `false` otherwise
-    function supportsInterface(bytes4 interfaceId) public override pure returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override
+        returns (bool)
+    {
         return
             interfaceId == type(IERC721WithPermit).interfaceId || // 0x5604e225
-            super.supportsInterface(interfaceId); 
+            super.supportsInterface(interfaceId);
     }
 }
