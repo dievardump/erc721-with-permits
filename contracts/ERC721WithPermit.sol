@@ -8,7 +8,7 @@ import '@openzeppelin/contracts/utils/cryptography/ECDSA.sol';
 import './IERC721WithPermit.sol';
 
 /// @title ERC721WithPermit
-/// @author Simon Fremaux (@dievardump) & William Schwab
+/// @author Simon Fremaux (@dievardump) & William Schwab (@wschwab)
 /// @notice This implementation of Permits links the nonce to the tokenId instead of the owner
 ///         This way, it is possible for a same account to create several usable permits at the same time,
 ///         for different ids
@@ -141,5 +141,18 @@ abstract contract ERC721WithPermit is IERC721WithPermit, ERC721 {
 
         // do normal transfer
         super._transfer(from, to, tokenId);
+    }
+
+    /// @notice Query if a contract implements an interface
+    /// @param interfaceId The interface identifier, as specified in ERC-165
+    /// @dev Overriden from ERC721 here in order to include the interface of this EIP
+    /// @return `true` if the contract implements `interfaceID` and
+    ///  `interfaceID` is not 0xffffffff, `false` otherwise
+    function supportsInterface(bytes4 interfaceId) public override pure returns (bool) {
+        return
+        interfaceId == type(IERC721).interfaceId ||
+        interfaceId == type(IERC721Metadata).interfaceId ||
+        interfaceId == type(IERC165).interfaceId ||
+        interfaceId == type(IERC721WithPermit).interfaceId; // 0x5604e225
     }
 }
