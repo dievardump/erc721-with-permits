@@ -23,11 +23,6 @@ abstract contract ERC721WithPermit is IERC721WithPermit, ERC721 {
 
     mapping(uint256 => uint256) private _nonces;
 
-    // function to initialize the contract
-    constructor(string memory name_, string memory symbol_)
-        ERC721(name_, symbol_)
-    {}
-
     /// @notice Builds the DOMAIN_SEPARATOR (eip712) at time of use
     /// @dev This is not set as a constant, to ensure that the chainId will change in the event of a chain fork
     /// @return the DOMAIN_SEPARATOR of eip712
@@ -150,6 +145,7 @@ abstract contract ERC721WithPermit is IERC721WithPermit, ERC721 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
+        virtual
         override
         returns (bool)
     {

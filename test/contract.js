@@ -1,6 +1,11 @@
 const { expect } = require('chai');
 const { deployments, ethers } = require('hardhat');
 
+const _INTERFACE_ID_ERC721 = '0x80ac58cd';
+const _INTERFACE_ID_ERC721_METADATA = '0x5b5e139f';
+const _INTERFACE_ID_ERC165 = '0x01ffc9a7';
+const _INTERFACE_WITH_PERMIT = '0x5604e225';
+
 describe('NFTMockWithPermiit', () => {
     // helper to sign using (spender, tokenId, nonce, deadline) EIP 712
     async function sign(spender, tokenId, nonce, deadline) {
@@ -56,6 +61,19 @@ describe('NFTMockWithPermiit', () => {
         await contract.mint();
     });
 
+    describe('Interfaces', async function () {
+        it('has all the right interfaces', async function () {
+            const interfaces = [
+                _INTERFACE_ID_ERC721,
+                _INTERFACE_ID_ERC721_METADATA,
+                _INTERFACE_ID_ERC165,
+                _INTERFACE_WITH_PERMIT,
+            ];
+            for (const interface of interfaces) {
+                expect(await contract.supportsInterface(interface)).to.be.true;
+            }
+        });
+    });
     describe('Permit', async function () {
         it('nonce increments after each transfer', async function () {
             expect(await contract.nonces(1)).to.be.equal(0);
