@@ -150,9 +150,7 @@ abstract contract ERC721WithPermit is IERC721WithPermit, ERC721 {
     ///  `interfaceID` is not 0xffffffff, `false` otherwise
     function supportsInterface(bytes4 interfaceId) public override pure returns (bool) {
         return
-        interfaceId == type(IERC721).interfaceId ||
-        interfaceId == type(IERC721Metadata).interfaceId ||
-        interfaceId == type(IERC165).interfaceId ||
-        interfaceId == type(IERC721WithPermit).interfaceId; // 0x5604e225
+            interfaceId == type(IERC721WithPermit).interfaceId || // 0x5604e225
+            super.supportsInterface(interfaceId); 
     }
 }
