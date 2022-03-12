@@ -23,10 +23,44 @@ abstract contract ERC721WithPermit is IERC721WithPermit, ERC721 {
 
     mapping(uint256 => uint256) private _nonces;
 
+    // this are saved as immutable for cheap access
+    // the chainId is also saved to be able to recompute domainSeparator
+    // in the case of a fork
+    bytes32 private immutable _domainSeparator;
+    uint256 private immutable _domainChainId;
+
+    constructor() {
+        uint256 chainId;
+        //solhint-disable-next-line no-inline-assembly
+        assembly {
+            chainId := chainid()
+        }
+
+        _domainChainId = chainId;
+        _domainSeparator = _calculateDomainSeparator(chainId);
+    }
+
     /// @notice Builds the DOMAIN_SEPARATOR (eip712) at time of use
     /// @dev This is not set as a constant, to ensure that the chainId will change in the event of a chain fork
     /// @return the DOMAIN_SEPARATOR of eip712
     function DOMAIN_SEPARATOR() public view returns (bytes32) {
+        uint256 chainId;
+        //solhint-disable-next-line no-inline-assembly
+        assembly {
+            chainId := chainid()
+        }
+
+        return
+            (chainId == _domainChainId)
+                ? _domainSeparator
+                : _calculateDomainSeparator(chainId);
+    }
+
+    function _calculateDomainSeparator(uint256 chainId)
+        internal
+        view
+        returns (bytes32)
+    {
         return
             keccak256(
                 abi.encode(
